@@ -1,0 +1,3 @@
+[INIT FOR AF]
+REG = 0xe4, 0xe0, 0x01, 0  
+END
