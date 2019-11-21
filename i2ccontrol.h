@@ -69,6 +69,9 @@ public:
     int vcm_move(int);
     int vcm_init();
     int vcm_read_hall_code(int pos);
+
+    //OIS operation
+    int ois_move(int x, int y);
 //    void test(int *, int);
 
     BOOL write_reg_fun(unsigned int, unsigned int, unsigned int, I2C_WR_modes);

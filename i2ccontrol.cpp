@@ -145,6 +145,24 @@ int i2cControl::vcm_init()
     return ret;
 }
 
+int i2cControl::ois_move(int x, int y)
+{
+    int slaveId = 0x7c;
+    //Select gyro (ST)
+    bool ret = gI2CControl->WriteReg(slaveId, 0xF015, 0x02, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    Sleep(150);
+    //Servo On
+    ret = gI2CControl->WriteReg(slaveId, 0xF010, 0x03, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    Sleep(150);
+    //Move X
+    ret = gI2CControl->WriteReg(slaveId, 0x0114, x, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    Sleep(150);
+    //Move Y
+    ret = gI2CControl->WriteReg(slaveId, 0x0164, y, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+
+    return ret;
+}
+
 int i2cControl::vcm_read_hall_code(int pos)
 {
     int slaveId = 45;

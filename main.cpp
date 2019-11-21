@@ -35,18 +35,27 @@ int main(int argc, char *argv[])
         qInfo("Waiting user command----");
         qInfo("q : quit the program");
         qInfo("m : move the vcm");
-
+        qInfo("s: scan devices");
+        qInfo("o: move the ois");
         cin>>cmd;
         qInfo("Input cmd: %s", cmd.toStdString().c_str());
         if (cmd == "q") { break; }
         else if (cmd == "m") {
             qInfo("Input the vcm position");
             cin>>cmd;
-            control.vcm_move(cmd.toInt(0));
-            qInfo("move complete 1");
+            control.vcm_move(cmd.toUInt(0));
         } else if (cmd == "s") {
             qInfo("Scan");
             control.readi2c();
+        } else if (cmd == "o") {
+            qInfo("Input the ois X position");
+            cin>>cmd;
+            unsigned int x = cmd.toUInt(0);
+            qInfo("Input the ois Y position");
+            cin>>cmd;
+            unsigned int y = cmd.toUInt(0);
+            qInfo(" x: %08X y: %08X", x, y);
+            control.ois_move(x, y);
         }
     }
 //
