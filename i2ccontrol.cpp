@@ -11,6 +11,7 @@ bool write(unsigned int slaveId, unsigned int regAddr, unsigned int value, I2C_W
     //bool ret = gI2CControl->WriteReg(slaveId, regAddr, value, mode);
     unsigned int feedback = 0;
     gI2CControl->ReadRegs(slaveId, regAddr, 1, &feedback, mode);
+    //Sleep(10);
     qInfo("Read value: %04x", feedback);
     return true;
 }
@@ -18,6 +19,7 @@ bool write(unsigned int slaveId, unsigned int regAddr, unsigned int value, I2C_W
 bool read(unsigned int slaveId, unsigned int regAddr, unsigned int *value, I2C_WR_modes mode){
     qInfo("Read i2c is called! SlaveId: %04X regAddr: %04X mode: %d", slaveId, regAddr, mode);
     bool ret = gI2CControl->ReadRegs(slaveId, regAddr, 1, value, mode);
+    //Sleep(10);
     qInfo("Read value: %04x", *value);
     return ret;
 }
@@ -25,6 +27,7 @@ bool read(unsigned int slaveId, unsigned int regAddr, unsigned int *value, I2C_W
 bool write2(unsigned int slaveId, unsigned int regAddr, unsigned int length, unsigned int *value, I2C_WR_modes mode){
     qInfo("Batch Write i2c is called! SlaveId: %04X regAddr: %04X length: %d mode: %d", slaveId, regAddr, length, mode);
     bool ret = gI2CControl->WriteRegs(slaveId, regAddr, length, value, mode);
+    //Sleep(10);
     return ret;
 }
 
@@ -32,6 +35,7 @@ bool read2(unsigned int slaveId, unsigned int regAddr, unsigned int length, unsi
     *value = 0;
     qInfo("Batch Read i2c is called! SlaveId: %04X regAddr: %04X length: %d mode: %d", slaveId, regAddr, length, mode);
     bool ret = gI2CControl->ReadRegs(slaveId, regAddr, length, value, mode);
+    //Sleep(10);
     return ret;
 }
 
@@ -69,6 +73,7 @@ i2cControl::i2cControl(QObject *parent) : QObject(parent)
         SMD_Init=(SMD_INIT)GetProcAddress(sunny_driver_hDll, "SMD_Init");
         SMD_MoveTo=(SMD_MOVETO)GetProcAddress(sunny_driver_hDll, "SMD_MoveTo");
         SMD_ReadHallCode=(SMD_READHALLCODE)GetProcAddress(sunny_driver_hDll, "SMD_ReadHallCode");
+        SMD_Position=(SMD_POSITION)GetProcAddress(sunny_driver_hDll,"Move_position");
     } else {
         int d = GetLastError();
         qCritical("SunnyMotorDriver.dll load fail: %d", d);
@@ -147,18 +152,133 @@ int i2cControl::vcm_init()
 
 int i2cControl::ois_move(int x, int y)
 {
-    int slaveId = 0x7c;
+//    unsigned int slaveId = 0x7c;
+//    //Select gyro (ST)
+//    bool ret = gI2CControl->WriteReg(slaveId, 0xF015, 0x02, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+//    Sleep(150);
+//    //Check if servo is on
+//    unsigned int value = ReadReg(slaveId, 0xF010, 1, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+//    if (value == 0x03)
+//    {
+//        //Move XY with servo on
+//        qInfo("Move xy with servo on, x = %d, y = %d", x, y);
+//        ret = gI2CControl->WriteReg(slaveId, 0x0114, x, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+//        Sleep(150);
+//        ret = gI2CControl->WriteReg(slaveId, 0x0164, y, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+//    }
+//    else if (value == 0x00)
+//    {
+//        //Move XY with servo off
+//        qInfo("Move xy with servo off, x = %d, y = %d", x, y);
+//        ret = gI2CControl->WriteReg(slaveId, 0x0128, x, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+//        Sleep(150);
+//        ret = gI2CControl->WriteReg(slaveId, 0x0178, y, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+//    }
+//    else
+//    {
+//        return -1;
+//    }
+
+//    return ret;
+
+    int ret = SMD_Position(write2, read2, true, x);
+    if (ret != 0)
+    {
+        qInfo("Move xy with servo on, x = %d, y = %d", x, y);
+    }
+    ret = SMD_Position(write2, read2, false, y);
+    if (ret != 0)
+    {
+        qInfo("Move xy with servo on, x = %d, y = %d", x, y);
+    }
+    return ret;
+}
+
+int i2cControl::ois_move_x(int x)
+{
+    unsigned int slaveId = 0x48;
+    //Standby off
+    bool ret = gI2CControl->WriteReg(slaveId, 0xF019, 0x00, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    Sleep(150);
     //Select gyro (ST)
-    bool ret = gI2CControl->WriteReg(slaveId, 0xF015, 0x02, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    ret = gI2CControl->WriteReg(slaveId, 0xF015, 0x02, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
     Sleep(150);
-    //Servo On
-    ret = gI2CControl->WriteReg(slaveId, 0xF010, 0x03, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    //Check if servo is on
+    unsigned int value = ReadReg(slaveId, 0xF010, 1, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    if (value == 0x03)
+    {
+        //Move X with servo on
+        qInfo("Move x with servo on, x = %d", x);
+        ret = gI2CControl->WriteReg(slaveId, 0x00DC, x, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    }
+    else if (value == 0x00)
+    {
+        //Move X with servo off
+        qInfo("Move x with servo off, x = %d", x);
+        ret = gI2CControl->WriteReg(slaveId, 0x0128, x, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    }
+    else
+    {
+        return -1;
+    }
+
+    return ret;
+}
+
+int i2cControl::ois_move_y(int y)
+{
+    unsigned int slaveId = 0x48;
+    //Standby off
+    bool ret = gI2CControl->WriteReg(slaveId, 0xF019, 0x00, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
     Sleep(150);
-    //Move X
-    ret = gI2CControl->WriteReg(slaveId, 0x0114, x, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    //Select gyro (ST)
+    ret = gI2CControl->WriteReg(slaveId, 0xF015, 0x02, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
     Sleep(150);
-    //Move Y
-    ret = gI2CControl->WriteReg(slaveId, 0x0164, y, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    //Check if servo is on
+    unsigned int value = ReadReg(slaveId, 0xF010, 1, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    if (value == 0x03)
+    {
+        //Move Y with servo on
+        qInfo("Move y with servo on, y = %d", y);
+        ret = gI2CControl->WriteReg(slaveId, 0x012C, y, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    }
+    else if (value == 0x00)
+    {
+        //Move Y with servo off
+        qInfo("Move y with servo off, y = %d", y);
+        ret = gI2CControl->WriteReg(slaveId, 0x0178, y, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    }
+    else
+    {
+        return -1;
+    }
+
+    return ret;
+}
+
+int i2cControl::ois_read_xy()
+{
+    bool ret = 0;
+    unsigned int slaveId = 0x48;
+    unsigned int x, y;
+    //Check if servo is on
+    unsigned int value = ReadReg(slaveId, 0xF010, 1, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    if (value == 0x03)
+    {
+        x = ReadReg(slaveId, 0x00DC, 4, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+        y = ReadReg(slaveId, 0x012C, 4, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+        qInfo("Servo is on, x = %d, y = %d", x, y);
+    }
+    else if (value == 0x00)
+    {
+        x = ReadReg(slaveId, 0x0128, 4, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+        y = ReadReg(slaveId, 0x0178, 4, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+        qInfo("Servo is off, x = %d, y = %d", x, y);
+    }
+    else
+    {
+        ret = -1;
+    }
 
     return ret;
 }
@@ -170,6 +290,24 @@ int i2cControl::vcm_read_hall_code(int pos)
     int value = 0;
     int mode = 512;
     int ret = SMD_ReadHallCode(slaveId,regAddr,&value,mode);
+    return ret;
+}
+
+int i2cControl::ois_servo_on()
+{
+    unsigned int slaveId = 0x48;
+    //Servo On
+    bool ret = gI2CControl->WriteReg(slaveId, 0xF010, 0x03, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    Sleep(150);
+    return ret;
+}
+
+int i2cControl::ois_servo_off()
+{
+    unsigned int slaveId = 0x48;
+    //Servo Off
+    bool ret = gI2CControl->WriteReg(slaveId, 0xF010, 0x00, I2C_WR_modes::I2CMODE_ADDR16_VALUE32);
+    Sleep(150);
     return ret;
 }
 

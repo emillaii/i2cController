@@ -32,3 +32,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     cserver.h \
     i2ccontrol.h
+
+TRANSLATIONS = chinese.ts english.ts

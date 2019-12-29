@@ -71,7 +71,12 @@ public:
     int vcm_read_hall_code(int pos);
 
     //OIS operation
+    int ois_servo_on();
+    int ois_servo_off();
     int ois_move(int x, int y);
+    int ois_move_x(int x);
+    int ois_move_y(int y);
+    int ois_read_xy();
 //    void test(int *, int);
 
     BOOL write_reg_fun(unsigned int, unsigned int, unsigned int, I2C_WR_modes);
@@ -89,10 +94,12 @@ public:
     typedef int(WINAPIV* SMD_MOVETO)(int,int,int);
     typedef int(WINAPIV* SMD_INIT)(void*, void*, void*, void*, void*, int, CString, bool, bool, bool);
     typedef int(WINAPIV* SMD_READHALLCODE)(int, int, int*, int);
+    typedef int(WINAPIV* SMD_POSITION)(void*, void*, bool, unsigned int);
 
     SMD_INIT SMD_Init;
     SMD_MOVETO SMD_MoveTo;
     SMD_READHALLCODE SMD_ReadHallCode;
+    SMD_POSITION SMD_Position;
 signals:
 
 public slots:

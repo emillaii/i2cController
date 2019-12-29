@@ -33,29 +33,63 @@ int main(int argc, char *argv[])
     while(true) {
         QString cmd;
         qInfo("Waiting user command----");
-        qInfo("q : quit the program");
-        qInfo("m : move the vcm");
+        qInfo("i: init vcm");
         qInfo("s: scan devices");
-        qInfo("o: move the ois");
+        qInfo("on: servo on");
+        qInfo("off: servo off");
+        qInfo("xy: move the ois");
+        qInfo("x: move the ois x axis");
+        qInfo("y: move the ois y axis");
+        qInfo("r: read xy");
+        qInfo("m: move the vcm");
+        qInfo("q: quit the program");
         cin>>cmd;
         qInfo("Input cmd: %s", cmd.toStdString().c_str());
         if (cmd == "q") { break; }
         else if (cmd == "m") {
             qInfo("Input the vcm position");
             cin>>cmd;
-            control.vcm_move(cmd.toUInt(0));
+            control.vcm_move(cmd.toInt(0));
         } else if (cmd == "s") {
             qInfo("Scan");
             control.readi2c();
-        } else if (cmd == "o") {
+        } else if (cmd == "xy") {
             qInfo("Input the ois X position");
             cin>>cmd;
-            unsigned int x = cmd.toUInt(0);
+            int x = cmd.toInt(0);
             qInfo("Input the ois Y position");
             cin>>cmd;
-            unsigned int y = cmd.toUInt(0);
+            int y = cmd.toInt(0);
             qInfo(" x: %08X y: %08X", x, y);
             control.ois_move(x, y);
+        }
+        else if (cmd == "x") {
+            qInfo("Input the ois X position");
+            cin>>cmd;
+            int x = cmd.toInt(0);
+            control.ois_move_x(x);
+        }
+        else if (cmd == "y") {
+            qInfo("Input the ois Y position");
+            cin>>cmd;
+            int y = cmd.toInt(0);
+            control.ois_move_y(y);
+        }
+        else if (cmd == "on") {
+            qInfo("Servo on");
+            control.ois_servo_on();
+        }
+        else if (cmd == "off") {
+            qInfo("Servo off");
+            control.ois_servo_off();
+        }
+        else if (cmd == "i") {
+            qInfo("Init vcm");
+            control.vcm_init();
+        }
+        else if (cmd == "r") {
+            qInfo("Read xy value");
+            control.ois_read_xy();
         }
     }
 //
