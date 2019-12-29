@@ -8,28 +8,29 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
     qInfo("Input argc: %d", argc);
     int ret = 0;
-    int vcm_pos = 0;
+    bool isDebugMode = false;
     if (argc > 1) {
-        vcm_pos = atoi(argv[1]);
-        qInfo("VCM move to pos: %d", vcm_pos);
+        //Add any debug flag here
+        isDebugMode = true;
     }
     QTextStream cin(stdin,  QIODevice::ReadOnly);
     QTextStream cout(stdout,  QIODevice::WriteOnly);
     QTextStream cerr(stderr,  QIODevice::WriteOnly);
     i2cControl control;
-//    control.vcm_move(vcm_pos);
-//    qInfo("End of the vcm move");
-//    CServer s;
-//    s.setI2CControl(&control);
-//    if (!s.init("localserver-test")){
-//        // 初使化失败, 说明已经有一个在运行了
-//        return 1;
-//    }
-//    return a.exec();
-//------Debug use
     control.openDevice();
-    control.vcm_init();
-    qInfo("vcm_move Done");
+    if (!isDebugMode)
+    {
+        CServer s;
+        s.setI2CControl(&control);
+        if (!s.init("localserver-test")){
+            // 初使化失败, 说明已经有一个在运行了
+            return 1;
+        }
+        qInfo("iic controller server is opened");
+        return a.exec();
+    }
+//------Debug use
+    //control.vcm_init();
     while(true) {
         QString cmd;
         qInfo("Waiting user command----");
@@ -92,6 +93,5 @@ int main(int argc, char *argv[])
             control.ois_read_xy();
         }
     }
-//
     return ret;
 }

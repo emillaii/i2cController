@@ -73,9 +73,11 @@ private slots:
         QString cmd = jsonObject["cmd"].toString();
         int delay = jsonObject["delay"].toInt(0);
         int pos = jsonObject["pos"].toInt(0);
+        int ois_x_pos = jsonObject["ois_x_pos"].toInt(0);
+        int ois_y_pos = jsonObject["ois_y_pos"].toInt(0);
         qInfo("Input cmd: %s", cmd.toStdString().c_str());
         qInfo("Input delay: %d",delay);
-        qInfo("Input pos: %d", pos);
+        qInfo("Input pos: %d ois_x_pos: %d ois_y_pos: %d", pos, ois_x_pos, ois_y_pos);
         if(cmd == "init")
         {
             if(m_control->openDevice())
@@ -95,6 +97,37 @@ private slots:
             else
             {
                 sendMessage("open i2c fail!");
+            }
+        }
+        else if (cmd == "af_ois_move")
+        {
+            int ret = 0;
+            ret &= m_control->vcm_move(ois_x_pos);
+            ret &= m_control->ois_move_x(ois_x_pos);
+            ret &= m_control->ois_move_y(ois_y_pos);
+            if(ret == 0)
+            {
+                sendMessage("move success!");
+            }
+            else
+            {
+                sendMessage(QString("move fail,error code %1!").arg(ret));
+                m_control->closeDevice();
+            }
+        }
+        else if(cmd == "ois_xy_move")
+        {
+            int ret = 0;
+            ret &= m_control->ois_move_x(ois_x_pos);
+            ret &= m_control->ois_move_y(ois_y_pos);
+            if(ret == 0)
+            {
+                sendMessage("move success!");
+            }
+            else
+            {
+                sendMessage(QString("move fail,error code %1!").arg(ret));
+                m_control->closeDevice();
             }
         }
         else if(cmd == "move")
